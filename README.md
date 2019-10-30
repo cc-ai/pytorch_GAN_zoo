@@ -1,25 +1,4 @@
-# Pytorch GAN Zoo
-
-A GAN toolbox for researchers and developers with:
-- Progressive Growing of GAN(PGAN): https://arxiv.org/pdf/1710.10196.pdf
-- DCGAN: https://arxiv.org/pdf/1511.06434.pdf
-- To come: StyleGAN https://arxiv.org/abs/1812.04948
-
-<img src="illustration.png" alt="illustration">
-Picture: Generated samples from GANs trained on celebaHQ, fashionGen, DTD.
-
-
-<img src="illustartionCelebaHQ.jpg" alt="celeba">
-Picture: fake faces with celebaHQ
-
-This code also implements diverse tools:
-- GDPP method from [GDPP: Learning Diverse Generations Using Determinantal Point Process](https://arxiv.org/abs/1812.00068)
-- Image generation "inspired" from a reference image using an already trained GAN from [Inspirational Adversarial Image Generation](https://arxiv.org/abs/1906.11661)
-- AC-GAN conditioning from [Conditional Image Synthesis With Auxiliary Classifier GANs](https://arxiv.org/abs/1610.09585)
-- [SWD metric](https://hal.archives-ouvertes.fr/hal-00476064/document)
-- [Inception Score](https://papers.nips.cc/paper/6125-improved-techniques-for-training-gans.pdf)
-- Logistic loss from [Which training method of GANs actually converge](https://arxiv.org/pdf/1801.04406.pdf)
-
+# This is an Attempt to extend PGAN for Image to Image Translation
 ## Requirements
 
 This project requires:
@@ -33,124 +12,30 @@ Optional:
 - visdom
 - nevergrad (inspirational generation)
 
-If you don't already have pytorch or torchvision please have a look at https://pytorch.org/ as the installation command may vary depending on your OS and your version of CUDA.
-
-You can install all other dependencies with pip by running:
-
+## Installing the dependencies with pip
 ```
 pip install -r requirements.txt
 ```
 
-## Recommended datasets
- - celebA: http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
- - celebAHQ: https://github.com/nperraud/download-celebA-HQ
- - fashionGen: https://fashion-gen.com/
- - DTD: https://www.robots.ox.ac.uk/~vgg/data/dtd/
- - CIFAR10: http://www.cs.toronto.edu/~kriz/cifar.html
-
-## Quick training
-
+## Preparing a dataset
 The datasets.py script allows you to prepare your datasets and build their corresponding configuration files.
-
-If you want to waste no time and just launch a training session on celeba cropped
-
-```
-python datasets.py celeba_cropped $PATH_TO_CELEBA/img_align_celeba/ -o $OUTPUT_DATASET
-python train.py PGAN -c config_celeba_cropped.json --restart -n celeba_cropped
-```
-
-And wait for a few days. Your checkpoints will be dumped in output_networks/celeba_cropped. You should get 128x128 generations at the end.
-
-For celebaHQ:
-
-```
-python datasets.py celebaHQ $PATH_TO_CELEBAHQ -o $OUTPUT_DATASET - f
-python train.py PGAN -c config_celebaHQ.json --restart -n celebaHQ
-```
-
-Your checkpoints will be dumped in output_networks/celebaHQ. You should get 1024x1024 generations at the end.
-
-For fashionGen:
-
-```
-python datasets.py fashionGen $PATH_TO_FASHIONGEN_RES_256 -o $OUTPUT_DIR
-python train.py PGAN -c config_fashionGen.json --restart -n fashionGen
-```
-
-The above command will train the fashionGen model up resolution 256x256. If you want to train fashionGen on a specific sub-dataset for example CLOTHING, run:
-
-```
-python train.py PGAN -c config_fashionGen.json --restart -n fashionGen -v CLOTHING
-```
-
-Four sub-datasets are available: CLOTHING, SHOES, BAGS and ACCESSORIES.
-
-For the DTD texture dataset:
-
-```
-python datasets.py dtd $PATH_TO_DTD
-python train.py PGAN -c config_dtd.json --restart -n dtd
-```
-
-For cifar10:
-
-```
-python datasets.py cifar10 $PATH_TO_CIFAR10 -o $OUTPUT_DATASET
-python train.py PGAN -c config_cifar10.json --restart -n cifar10
-```
-
-## Load a pretrained model with torch.hub
-
-Models trained on celebaHQ, fashionGen, cifar10 and celeba cropped are available with [torch.hub](https://pytorch.org/docs/stable/hub.html).
-
-Checkpoints:
-- PGAN:
-  - celebaHQ https://dl.fbaipublicfiles.com/gan_zoo/PGAN/celebaHQ_s6_i80000-6196db68.pth
-  - celeba_cropped https://dl.fbaipublicfiles.com/gan_zoo/PGAN/celebaCropped_s5_i83000-2b0acc76.pth
-  - dtd https://dl.fbaipublicfiles.com/gan_zoo/PGAN/testDTD_s5_i96000-04efa39f.pth
-
-- DCGAN
-  - fashionGen https://dl.fbaipublicfiles.com/gan_zoo/DCGAN_fashionGen-1d67302.pth
-
-See hubconf.py for how to load a checkpoint !
-
-## GDPP
-
-To apply the GDPP loss to your model just add the option --GDPP true to your training command.
-
-## Advanced guidelines
 
 ### How to run a training session ?
 
 ```
-python train.py $MODEL_NAME -c $CONFIGURATION_FILE[-n $RUN_NAME][-d $OUTPUT_DIRECTORY][OVERRIDES]
+python train.py PGAN -c $CONFIGURATION_FILE[-n $RUN_NAME][-d $OUTPUT_DIRECTORY][OVERRIDES]
 ```
 
 Where:
 
-1 - MODEL_NAME is the name of the model you want to run. Currently, two models are available:
-    - PGAN(progressive growing of gan)
-    - PPGAN(decoupled version of PGAN)
+1 - CONFIGURATION_FILE(mandatory): path to a training configuration file. This file is a json file containing at least a pathDB entry with the path to the training dataset. See below for more informations about this file.
 
-2 - CONFIGURATION_FILE(mandatory): path to a training configuration file. This file is a json file containing at least a pathDB entry with the path to the training dataset. See below for more informations about this file.
+2 - RUN_NAME is the name you want to give to your training session. All checkpoints will be saved in $OUTPUT_DIRECTORY/$RUN_NAME. Default value is default
 
-3 - RUN_NAME is the name you want to give to your training session. All checkpoints will be saved in $OUTPUT_DIRECTORY/$RUN_NAME. Default value is default
+3 - OUTPUT_DIRECTORY is the directory were all training sessions are saved. Default value is output_networks
 
-4 - OUTPUT_DIRECTORY is the directory were all training sessions are saved. Default value is output_networks
+4 - OVERRIDES: you can overrides some of the models parameters defined in "config" field of the configuration file(see below) in the command line. For example:
 
-5 - OVERRIDES: you can overrides some of the models parameters defined in "config" field of the configuration file(see below) in the command line. For example:
-
-```
-python train.py PPGAN -c coin.json -n PAN --learningRate 0.2
-```
-
-Will force the learning rate to be 0.2 in the training whatever the configuration file coin.json specifies.
-
-To get all the possible override options, please type:
-
-```
-python train.py $MODEL_NAME --overrides
-```
 
 ## Configuration file of a training session
 
@@ -209,22 +94,14 @@ You need to use the eval.py script.
 
 You can generate more images from an existing checkpoint using:
 ```
-python eval.py visualization -n $modelName -m $modelType
+python eval.py visualization -n PGAN -m $modelType
 ```
 
-Where modelType is in [PGAN, PPGAN, DCGAN] and modelName is the name given to your model. This script will load the last checkpoint detected at testNets/$modelName. If you want to load a specific iteration, please call:
+Where modelType is PGAN and modelName is the name given to your model. This script will load the last checkpoint detected at testNets/$modelName. If you want to load a specific iteration, please call:
 
 ```
-python eval.py visualization -n $modelName -m $modelType -s $SCALE -i $ITER
+python eval.py visualization -n PGAN -m $modelType -s $SCALE -i $ITER
 ```
-
-If your model is conditioned, you can ask the visualizer to print out some conditioned generations. For example:
-
-```
-python eval.py visualization -n $modelName -m $modelType --Class T_SHIRT
-```
-
-Will plot a batch of T_SHIRTS in visdom. Please use the option - -showLabels to see all the available labels for your model.
 
 ### Fake dataset generation
 
