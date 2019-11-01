@@ -1,4 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+from comet_ml import Experiment
+
+comet_exp = Experiment()
+
 import os
 import sys
 import importlib
@@ -34,6 +38,8 @@ if __name__ == "__main__":
                          please run train.py $MODEL_NAME -overrides')
     parser.add_argument('--no_vis', help=' Disable all visualizations',
                         action='store_true')
+    parser.add_argument('--comet_vis', help='Visualize with comet_ml',
+                    action='store_true')
     parser.add_argument('--np_vis', help=' Replace visdom by a numpy based \
                         visualizer (SLURM)',
                         action='store_true')
@@ -106,6 +112,8 @@ if __name__ == "__main__":
         vis_module = importlib.import_module("visualization.np_visualizer")
     elif baseArgs.no_vis:
         print("Visualization disabled")
+    elif baseArgs.comet_vis:
+        vis_module = importlib.import_module("visualization.comet_visualizer")
     else:
         vis_module = importlib.import_module("visualization.visualizer")
 
@@ -126,6 +134,7 @@ if __name__ == "__main__":
                                saveIter= kwargs["saveIter"],
                                modelLabel=modelLabel,
                                partitionValue=partitionValue,
+                               comet_exp = comet_exp,
                                **trainingConfig)
 
     # If a checkpoint is found, load it

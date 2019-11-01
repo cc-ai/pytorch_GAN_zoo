@@ -32,7 +32,8 @@ class GANTrainer():
                  imagefolderDataset=False,
                  ignoreAttribs=False,
                  pathPartition=None,
-                 partitionValue=None):
+                 partitionValue=None,
+                 comet_exp = None):
         r"""
         Args:
             - pathdb (string): path to the directorty containing the image
@@ -66,6 +67,7 @@ class GANTrainer():
         """
 
         # Parameters
+        self.comet_exp = comet_exp
         # Training dataset
         self.path_db = pathdb
         self.pathPartition = pathPartition
@@ -360,7 +362,8 @@ class GANTrainer():
             self.visualisation.publishTensors(refVectorReal,
                                               (imgSize, imgSize),
                                               label + " real",
-                                              env=envLabel)
+                                              env=envLabel,
+                                              comet_exp = self.comet_exp)
 
         ref_g_smooth = self.model.test(self.refVectorVisualization, True)
         self.tokenWindowFakeSmooth = \
@@ -368,7 +371,8 @@ class GANTrainer():
                                               (imgSize, imgSize),
                                               label + " smooth",
                                               self.tokenWindowFakeSmooth,
-                                              env=envLabel)
+                                              env=envLabel,
+                                              comet_exp = self.comet_exp)
 
         ref_g = self.model.test(self.refVectorVisualization, False)
 
@@ -377,18 +381,21 @@ class GANTrainer():
                                               (imgSize, imgSize),
                                               label + " fake",
                                               self.tokenWindowFake,
-                                              env=envLabel)
+                                              env=envLabel,
+                                              comet_exp = self.comet_exp)
         self.tokenWindowReal = \
             self.visualisation.publishTensors(refVectorReal,
                                               (imgSize, imgSize),
                                               label + " real",
                                               self.tokenWindowReal,
-                                              env=envLabel)
+                                              env=envLabel,
+                                              comet_exp = self.comet_exp)
         self.tokenWindowLosses = \
             self.visualisation.publishLoss(self.lossProfile[scale],
                                            self.modelLabel,
                                            self.tokenWindowLosses,
-                                           env=envLabel)
+                                           env=envLabel,
+                                           comet_exp = self.comet_exp)
 
     def getDBLoader(self, scale):
         r"""
